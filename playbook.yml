@@ -1,0 +1,62 @@
+---
+- hosts: all
+  tasks:
+  - name: download gitea
+    get_url:
+      url: https://dl.gitea.io/gitea/1.11.5/gitea-1.11.5-linux-amd64
+      dest: /usr/local/bin/gitea
+      mode: 0755
+      checksum: sha256:d8d43c13e71596c79b541e85e29defe065b4f70ac5155e6d0212bcfc669e1b9c
+      
+  - name: Install git
+    apt:
+      name: git
+      state: present
+      update_cache: yes
+     
+  - name: Add the user 'gitea' with a bash shell, appending the group 'admins' and 'developers' to the user's groups
+    user:
+      name: git
+      comment: 'git version control'
+      shell: /sbin/nologin
+      home: /home/git
+      groups: sys
+      append: yes 
+
+  - name: Create some directories
+    file:
+      path: "/var/lib/gitea/{{item}}"
+      owner: git
+      group: git
+      mode: 0755
+      recurse: yes
+      state: directory
+    with_items: ["custom", "data", "log"]
+
+  - name: Create additional directories
+    file:
+      path: "/etc/gitea"
+      owner: root
+      group: git
+      mode: 0770
+      recurse: yes
+      state: directory
+    with_items: ["custom", "data", "log"]
+
+  - name: gitea.service startup script
+    get_url:
+      url: https://raw.githubusercontent.com/go-gitea/gitea/master/contrib/systemd/gitea.service
+      dest: /etc/systemd/system/gitea.service
+      mode: 0744
+      
+  - name: enable service gitea and ensure it is not masked
+    systemd:
+      name: gitea.service
+      enabled: yes
+      masked: no
+      
+  - name: Make sure gitea service is running
+    systemd:
+      state: started
+      name: gitea 
+

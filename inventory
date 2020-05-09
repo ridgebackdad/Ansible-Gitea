@@ -1,0 +1,6 @@
+[hosts]
+192.168.100.162
+
+[hosts:vars]
+ansible_user=rick
+
