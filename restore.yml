@@ -1,0 +1,40 @@
+---
+- hosts: all
+  tasks:
+  - name: move the backup to the remote host
+    unarchive:
+        src: ./restorefile.zip
+        dest: /home/git/
+        copy: yes
+
+  - name: move gitea config file
+    copy:
+        src: /home/git/app.ini
+        dest: /etc/gitea/
+        owner: root
+        group: git
+        force: yes
+        remote_src: yes
+
+  - name: unzip the actual repos
+    unarchive:
+      src: /home/git/gitea-repo.zip
+      dest: /home/git/
+      remote_src: yes
+      owner: git
+      group: git
+
+  - name: move copies to their respective places
+    copy:
+        src: /home/git/var/lib/gitea/data/gitea.db
+        dest: /var/lib/gitea/data/
+        owner: git
+        group: git
+        force: yes
+        remote_src: yes
+        
+  - name: restart gitea
+    service:
+      name: gitea
+      state: restarted
+      
